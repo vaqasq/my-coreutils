@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <errno.h>
+#include <unistd.h>
+#include <string.h>
 #include <stdlib.h>
 
 /* Goals
@@ -9,9 +12,38 @@
 
 int main(int argc, char* argv[]){
 
-    if (argc == 1){
-        char* err = "Sleep requires at least one argument. See man page.";
+    if (argc != 2){
+        char* err = "Improper use of sleep. See man page.";
         fprintf(stderr, "%s\n", err);
+        return EXIT_FAILURE;
+    }
+
+    char* end;
+    long sleepLength; 
+
+    errno = 0;
+    sleepLength = strtol(argv[1], &end, 10);
+
+    if (errno == EINVAL || errno == ERANGE) {
+        perror("strtol");
+        return EXIT_FAILURE;
+    }
+
+    if (0 == strcmp("", end) || 0 == strcmp("s", end)){
+        sleep((unsigned int)sleepLength);
+    }
+    else if (0 == strcmp("m", end)){
+        sleep((unsigned int)(sleepLength * 60));
+    }
+    else if (0 == strcmp("h", end)){
+        sleep((unsigned int)(sleepLength * 3600));
+    }
+    else if (0 == strcmp("d", end)){
+        sleep((unsigned int)(sleepLength * 86400));
+    }
+    else {
+        fprintf(stderr, "Improper use of sleep. See man page.");
+        return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;
