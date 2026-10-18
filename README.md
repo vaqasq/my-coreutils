@@ -23,3 +23,6 @@ Prints working directory, with "pwd" and "pwd -L" being equivalent, printing the
 
 #### sleep
 You can append the unit of time to the end of the singular flag (s, m, h, or d). You can also use && with this function, as this is handled by Bash.
+
+#### whoami
+Simply prints user.
