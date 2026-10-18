@@ -19,10 +19,10 @@ int main(int argc, char* argv[]){
     }
 
     char* end;
-    long sleepLength; 
+    double sleepLength; 
 
     errno = 0;
-    sleepLength = strtol(argv[1], &end, 10);
+    sleepLength = strtod(argv[1], &end);
 
     if (errno == EINVAL || errno == ERANGE) {
         perror("strtol");
