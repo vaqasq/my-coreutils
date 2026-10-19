@@ -3,6 +3,8 @@
 
 #include <sys/resource.h>
 #include <sys/types.h>
+#include <string.h>
+#include <errno.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +30,9 @@ int main(int argc, char *argv[]){
             case 'A':
                 allFlag = true;
                 break;
+            case '?':
+                fprintf(stderr, "Improper flag. See man page.\n");
+                return EXIT_FAILURE;
         }
     }
 
@@ -48,7 +53,7 @@ int main(int argc, char *argv[]){
         currDirFlag = opendir(argv[i]);
 
         if (NULL == currDirFlag){
-            perror("");
+           fprintf(stderr, "Error opening file '%s': %s\n", argv[i], strerror(errno));
             return EXIT_FAILURE;
         }
 
@@ -57,7 +62,7 @@ int main(int argc, char *argv[]){
     }
 
     // work with dirs, using flags;
-
+    
     // closing open directories
     for (int i = 0; i < numDirectoriesEntries; ++i){
         closedir(directoriesArr[i]);
