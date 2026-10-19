@@ -14,6 +14,20 @@
 
 int main(int argc, char *argv[]){
 
+    // Hardcode just ./ls
+
+    if (argc == 1){
+        char* path = getenv("PWD");
+        DIR* currDir = opendir(path);
+
+        struct dirent *entry;
+        while ((entry = readdir(currDir)) != NULL){
+            if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, ".."))
+                printf("%s\n", entry->d_name);
+        }
+        return EXIT_SUCCESS;
+    }
+
     // Flags, R, l, A
     bool recursiveFlag, longInfoFlag, allFlag; 
     char* flag_str = "RlA";
@@ -41,7 +55,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "Expected argument after options\n");
         return EXIT_FAILURE; 
     }
-    
+
     // Type should problably be what opendir returns instead;
     DIR **directoriesArr = malloc((argc-1) * sizeof(DIR *));
     int numDirectoriesEntries = 0;
@@ -53,16 +67,17 @@ int main(int argc, char *argv[]){
         currDirFlag = opendir(argv[i]);
 
         if (NULL == currDirFlag){
-           fprintf(stderr, "Error opening file '%s': %s\n", argv[i], strerror(errno));
+            fprintf(stderr, "Error opening file '%s': %s\n", argv[i], strerror(errno));
             return EXIT_FAILURE;
         }
 
         directoriesArr[numDirectoriesEntries++] = currDirFlag;
-        
+
     }
 
-    // work with dirs, using flags;
-    
+    // work with dirs, using flags: A, l, R
+
+
     // closing open directories
     for (int i = 0; i < numDirectoriesEntries; ++i){
         closedir(directoriesArr[i]);
@@ -70,3 +85,4 @@ int main(int argc, char *argv[]){
 
     return EXIT_SUCCESS;
 }
+
