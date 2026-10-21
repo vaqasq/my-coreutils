@@ -1,4 +1,4 @@
-// Implement the following flags: -R for recursive, -l for listing info, -A for all (not . and ..), as well as many folders as listed. 
+// Implement the following flags: -R for recursive, -l for listing info, as well as many folders as listed. 
 // While ls takes files and simply returns them, I think I will choose to error if given a file.
 
 #include <sys/resource.h>
@@ -17,20 +17,20 @@ int main(int argc, char *argv[]){
     // Hardcode just ./ls
 
     if (argc == 1){
-        char* path = getenv("PWD");
-        DIR* currDir = opendir(path);
+        DIR* currDir = opendir(".");
 
         struct dirent *entry;
         while ((entry = readdir(currDir)) != NULL){
             if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, ".."))
-                printf("%s\n", entry->d_name);
+                printf("%s   ", entry->d_name);
         }
+        printf("\n");
         return EXIT_SUCCESS;
     }
 
-    // Flags, R, l, A
-    bool recursiveFlag, longInfoFlag, allFlag; 
-    char* flag_str = "RlA";
+    // Flags, R, l
+    bool recursiveFlag, longInfoFlag; 
+    char* flag_str = "Rl";
 
     int opt;
     while ((opt = getopt(argc, argv, flag_str)) != -1){
@@ -41,9 +41,6 @@ int main(int argc, char *argv[]){
             case 'l':
                 longInfoFlag = true;
                 break;
-            case 'A':
-                allFlag = true;
-                break;
             case '?':
                 fprintf(stderr, "Improper flag. See man page.\n");
                 return EXIT_FAILURE;
@@ -51,31 +48,41 @@ int main(int argc, char *argv[]){
     }
 
     // global var optind, an index into argv, is now the directories;
+
+    // Assume size 1 for now, otherwise realloc
+    DIR **directoriesArr = malloc(sizeof(DIR*));
+    int numDirectoriesEntries;
+
+    // If no specific folders were provided, assume it is just the current folder
     if (optind >= argc) {
-        fprintf(stderr, "Expected argument after options\n");
-        return EXIT_FAILURE; 
+
+        numDirectoriesEntries = 1;
+        directoriesArr[0] = opendir(".");
+
     }
+    // Else, there are other options that need to be acted upon;
+    else {
 
-    // Type should problably be what opendir returns instead;
-    DIR **directoriesArr = malloc((argc-1) * sizeof(DIR *));
-    int numDirectoriesEntries = 0;
+        directoriesArr = realloc(directoriesArr, (argc-1) * sizeof(DIR *));
+        numDirectoriesEntries = 0;
 
-    DIR *currDirFlag;
+        DIR *currDirFlag;
+        for (int i = optind; i < argc; ++i){
 
-    for (int i = optind; i < argc; ++i){
+            currDirFlag = opendir(argv[i]);
 
-        currDirFlag = opendir(argv[i]);
+            if (NULL == currDirFlag){
+                fprintf(stderr, "Error opening file '%s': %s\n", argv[i], strerror(errno));
+                return EXIT_FAILURE;
+            }
 
-        if (NULL == currDirFlag){
-            fprintf(stderr, "Error opening file '%s': %s\n", argv[i], strerror(errno));
-            return EXIT_FAILURE;
+            directoriesArr[numDirectoriesEntries++] = currDirFlag;
+
         }
 
-        directoriesArr[numDirectoriesEntries++] = currDirFlag;
-
     }
 
-    // work with dirs, using flags: A, l, R
+    // work with dirs, using flags: l, R. Make reusable functions so recursive search is easy as well as long
 
 
     // closing open directories
