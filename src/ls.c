@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+void printDir(DIR *dir, char *dirName);
 
 int main(int argc, char *argv[]){
 
@@ -19,12 +20,7 @@ int main(int argc, char *argv[]){
     if (argc == 1){
         DIR* currDir = opendir(".");
 
-        struct dirent *entry;
-        while ((entry = readdir(currDir)) != NULL){
-            if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, ".."))
-                printf("%s   ", entry->d_name);
-        }
-        printf("\n");
+        printDir(currDir, "Current Dir");
         return EXIT_SUCCESS;
     }
 
@@ -51,20 +47,24 @@ int main(int argc, char *argv[]){
 
     // Assume size 1 for now, otherwise realloc
     DIR **directoriesArr = malloc(sizeof(DIR*));
-    int numDirectoriesEntries;
+    char **directoriesNameArr = malloc(sizeof(char*));
+    // The number of directory entries will be the same for both their DIR* and their names
+    int numDirectoryEntries;
 
     // If no specific folders were provided, assume it is just the current folder
     if (optind >= argc) {
 
-        numDirectoriesEntries = 1;
+        numDirectoryEntries = 1;
         directoriesArr[0] = opendir(".");
+        directoriesNameArr[0] = malloc((strlen("Current Dir") + 1) * sizeof(char));
+        strcpy(directoriesNameArr[0], "Current Dir");
 
     }
     // Else, there are other options that need to be acted upon;
     else {
 
         directoriesArr = realloc(directoriesArr, (argc-1) * sizeof(DIR *));
-        numDirectoriesEntries = 0;
+        numDirectoryEntries = 0;
 
         DIR *currDirFlag;
         for (int i = optind; i < argc; ++i){
@@ -76,7 +76,14 @@ int main(int argc, char *argv[]){
                 return EXIT_FAILURE;
             }
 
-            directoriesArr[numDirectoriesEntries++] = currDirFlag;
+            directoriesArr[numDirectoryEntries] = currDirFlag;
+
+            // Add name aswell
+
+            directoriesNameArr[numDirectoryEntries] = malloc((strlen(argv[i]) + 1) * sizeof(char));
+            strcpy(directoriesNameArr[numDirectoryEntries], argv[i]);
+
+            numDirectoryEntries++;
 
         }
 
@@ -86,10 +93,22 @@ int main(int argc, char *argv[]){
 
 
     // closing open directories
-    for (int i = 0; i < numDirectoriesEntries; ++i){
+    for (int i = 0; i < numDirectoryEntries; ++i){
         closedir(directoriesArr[i]);
     }
 
     return EXIT_SUCCESS;
+}
+
+void printDir(DIR *dir, char *dirName){
+
+    printf("%s:\n", dirName);
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL){
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, ".."))
+            printf("%s   ", entry->d_name);
+    }
+    printf("\n");
 }
 
