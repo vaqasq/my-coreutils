@@ -1,5 +1,4 @@
-// Implement the following flags: -R for recursive, -l for listing info, as well as many folders as listed. 
-// While ls takes files and simply returns them, I think I will choose to error if given a file.
+// Implement the following flags: -l for stats, -a for if it starts with .
 
 #include <sys/resource.h>
 #include <sys/types.h>
@@ -9,30 +8,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <stdbool.h>
 
-void printDir(DIR *dir, char *dirName);
+void printDir(DIR *dir, char *dirName, bool allFlag, bool statFlag);
 
 int main(int argc, char *argv[]){
 
     // Hardcode just ./ls
-
     if (argc == 1){
         DIR* currDir = opendir(".");
 
-        printDir(currDir, "Current Dir");
+        printDir(currDir, "Current Dir", false, false);
         return EXIT_SUCCESS;
     }
 
-    // Flags, R, l
-    bool recursiveFlag, longInfoFlag; 
-    char* flag_str = "Rl";
+    // Flags, a, l
+    bool listAllFlag = false;
+    bool longInfoFlag = false;
+    char* flag_str = "al";
 
     int opt;
     while ((opt = getopt(argc, argv, flag_str)) != -1){
         switch (opt){
-            case 'R':
-                recursiveFlag = true;
+            case 'a':
+                listAllFlag = true;
                 break;
             case 'l':
                 longInfoFlag = true;
@@ -89,7 +90,10 @@ int main(int argc, char *argv[]){
 
     }
 
-    // work with dirs, using flags: l, R. Make reusable functions so recursive search is easy as well as long
+    // work with dirs, -l, -a
+    for (int i = 0; i < numDirectoryEntries; ++i){
+        printDir(directoriesArr[i], directoriesNameArr[i], listAllFlag, longInfoFlag);
+    }
 
 
     // closing open directories
@@ -100,14 +104,29 @@ int main(int argc, char *argv[]){
     return EXIT_SUCCESS;
 }
 
-void printDir(DIR *dir, char *dirName){
+void printDir(DIR *dir, char *dirName, bool allFlag, bool statFlag){
 
     printf("%s:\n", dirName);
 
     struct dirent *entry;
+    struct stat sb;
+    int fd = dirfd(dir);
+
     while ((entry = readdir(dir)) != NULL){
-        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, ".."))
-            printf("%s   ", entry->d_name);
+        if (entry->d_name[0] != '.' || allFlag){
+            if (statFlag) {
+                if (fstatat(fd, entry->d_name, &sb, AT_SYMLINK_NOFOLLOW) == -1) {
+                    perror("lstat");
+                    fprintf(stderr, "%s\n", entry->d_name);
+                    exit(EXIT_FAILURE);
+                }
+                // unix time stamp lol
+                printf("%ld\t%lld\t%s\n", sb.st_atime, sb.st_size, entry->d_name);
+
+            } else {
+                printf("%s   ", entry->d_name);
+            }
+        }
     }
     printf("\n");
 }
