@@ -1,3 +1,5 @@
+The real GNU Coreutils have many, many flags. I simply implemented the ones I use.
+
 #### echo
 Reimplements basic functionality as described on its respective man-page, including the -n flag. Your shell will interpret and parse the arguments. This is significant because, as you may have noticed, GNU echo's behavior regarding quotation marks might not be what your expect.
 
