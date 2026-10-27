@@ -30,3 +30,6 @@ Simply prints user.
 
 #### ls
 Provides the -l and -a options. Accepts -la, or -l -a, order-agnostic.
+
+#### mkdir
+Assumes parent dirs already exist. No available flags.
