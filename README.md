@@ -27,4 +27,4 @@ You can append the unit of time to the end of the singular flag (s, m, h, or d).
 Simply prints user.
 
 #### ls
-Provides the -l and -a options. Accepts -la, or -l -a, and any order.
+Provides the -l and -a options. Accepts -la, or -l -a, order-agnostic.
